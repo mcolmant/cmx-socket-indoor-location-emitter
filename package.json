@@ -7,8 +7,7 @@
     "npm": "5.4.2"
   },
   "scripts": {
-    "start-listener": "node cmx-listener/app.js",
-    "start-emitter": "node cmx-emitter/app.js"
+    "start": "node cmx-listener/app.js"
   },
   "repository": {
     "type": "git",

@@ -28,7 +28,7 @@ function createSharedAccessToken(uri, saName, saKey) {
 if (config.azureEventHub.enabled.toString() === 'true') {
     eventHubConfig = {
       Authorization: createSharedAccessToken(config.azureEventHub.serviceBusUri, config.azureEventHub.saName, config.azureEventHub.saKey),
-      ContentType: 'application/json;type=entry;charset=utf-8',
+      ContentType: 'application/json;charset=utf-8',
       Host: config.azureEventHub.serviceBusUri
     };
     utils.log('The AZ EventHub is enabled');
