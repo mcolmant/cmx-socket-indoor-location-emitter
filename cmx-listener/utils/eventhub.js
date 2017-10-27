@@ -27,9 +27,9 @@ function createSharedAccessToken(uri, saName, saKey) {
 
 if (config.azureEventHub.enabled.toString() === 'true') {
     eventHubConfig = {
-      Authorization: createSharedAccessToken(config.azureEventHub.busNamespace, config.azureEventHub.saName, config.azureEventHub.saKey),
+      Authorization: createSharedAccessToken(config.azureEventHub.serviceBusUri, config.azureEventHub.saName, config.azureEventHub.saKey),
       ContentType: 'application/json;type=entry;charset=utf-8',
-      Host: config.azureEventHub.busNamespace
+      Host: config.azureEventHub.serviceBusUri
     };
     utils.log('The AZ EventHub is enabled');
 }
@@ -39,7 +39,7 @@ if (config.azureEventHub.enabled.toString() === 'true') {
  */
 function insertCMXNotification(cmxNotification) {
     if (eventHubConfig) {
-        axios.post(`https://${config.azureEventHub.busNamespace}/${config.azureEventHub.eventHubPath}/messages`, JSON.stringify(cmxNotification), { headers: eventHubConfig })
+        axios.post(`https://${config.azureEventHub.serviceBusUri}/${config.azureEventHub.eventHubPath}/messages`, JSON.stringify(cmxNotification), { headers: eventHubConfig })
             .catch(function (err) {
               console.log(err);
             });
