@@ -3,9 +3,9 @@ var utils = require('../utils');
 
 var utf8 = require('utf8');
 var crypto = require('crypto');
-var axios = require('axios');
+var request = require('request');
 
-var eventHubConfig = undefined;
+var eventHubAuth = undefined;
 
 /**
  * From
@@ -26,11 +26,7 @@ function createSharedAccessToken(uri, saName, saKey) {
 }
 
 if (config.azureEventHub.enabled.toString() === 'true') {
-    eventHubConfig = {
-      Authorization: createSharedAccessToken(config.azureEventHub.serviceBusUri, config.azureEventHub.saName, config.azureEventHub.saKey),
-      ContentType: 'application/json;charset=utf-8',
-      Host: config.azureEventHub.serviceBusUri
-    };
+    eventHubAuth = createSharedAccessToken(config.azureEventHub.serviceBusUri, config.azureEventHub.saName, config.azureEventHub.saKey);
     utils.log('The AZ EventHub is enabled');
 }
 
@@ -38,11 +34,28 @@ if (config.azureEventHub.enabled.toString() === 'true') {
  * We make direct HTTP requests to the EventHub because the node EventHub library is still in heavy development (not production ready)
  */
 function insertCMXNotification(cmxNotification) {
-    if (eventHubConfig) {
-        axios.post(`https://${config.azureEventHub.serviceBusUri}/${config.azureEventHub.eventHubPath}/messages`, JSON.stringify(cmxNotification), { headers: eventHubConfig })
-            .catch(function (err) {
+    if (eventHubAuth) {
+        var content = JSON.stringify(cmxNotification);
+
+        request.post({
+            headers: {
+              'Content-Length': content.length,
+              'Content-Type': 'application/json;charset=utf-8',
+              'Authorization': eventHubAuth,
+              'Origin': '*',
+              'Access-Control-Allow-Credentials': true
+            },
+            uri: `https://${config.azureEventHub.serviceBusUri}/${config.azureEventHub.eventHubPath}/messages`,
+            method: 'POST',
+            body: content
+        },
+        function(err, resp, body) {
+            if(err){
               console.log(err);
-            });
+            } else {
+              console.log(resp.statusCode + ': ' + resp.statusMessage);
+            }
+        });
     }
 };
 exports.insertCMXNotification = insertCMXNotification;
