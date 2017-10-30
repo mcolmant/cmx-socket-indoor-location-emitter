@@ -84,7 +84,7 @@ function insertCMXNotification(cmxNotification) {
             });
 
             contentLength = 0;
-            message = [];
+            messages = [];
         }
     }
 };
