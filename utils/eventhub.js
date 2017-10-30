@@ -46,20 +46,12 @@ if (config.azureEventHub.enabled.toString() === 'true') {
  */
 function insertCMXNotification(cmxNotification) {
     if (eventHubAuth) {
-        //message = [{Body: '{"Test": 10}'}, {Body: '{"Test": 10}'}];
-        //var conten
-        //message = [{Body: JSON.stringify(cmxNotification)}];
-        //contentLength = JSON.stringify(message).length;
-        //message += cmxNotification;
-
-        //message = [ { Body: JSON.stringify(cmxNotification) } ];
-        //contentLength = JSON.stringify(message).length;
-
         var object = { Body: JSON.stringify(cmxNotification) };
         messages.push(object);
         var contentLength = JSON.stringify(messages).length;
 
-        if (contentLength > 128 * 1024) {
+        // Send each message, but can be configured (the payload cannot be greated than 256KB)
+        if (contentLength > 1) {
             request.post({
                 'https-agent': keepaliveAgent,
                 'headers': {
