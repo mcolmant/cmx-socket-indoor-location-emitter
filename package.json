@@ -21,6 +21,7 @@
   "homepage": "https://github.com/IndoorLocation/cmx-socket-indoor-location-emitter#readme",
   "dependencies": {
     "@mapbox/sphericalmercator": "1.0.5",
+    "agentkeepalive": "3.3.0",
     "async": "2.5.0",
     "body-parser": "1.18.2",
     "express": "4.16.2",

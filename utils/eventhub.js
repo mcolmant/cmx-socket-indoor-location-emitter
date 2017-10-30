@@ -4,8 +4,19 @@ var utils = require('../utils');
 var utf8 = require('utf8');
 var crypto = require('crypto');
 var request = require('request');
+var Agent = require('agentkeepalive');
 
 var eventHubAuth = undefined;
+
+var messages = [];
+
+var keepaliveAgent = new Agent({
+  maxSockets: 160,
+  maxFreeSockets: 10,
+  timeout: 60000,
+  freeSocketKeepAliveTimeout: 30000, // free socket keepalive for 30 seconds
+});
+
 
 /**
  * From
@@ -35,27 +46,46 @@ if (config.azureEventHub.enabled.toString() === 'true') {
  */
 function insertCMXNotification(cmxNotification) {
     if (eventHubAuth) {
-        var content = JSON.stringify(cmxNotification);
+        //message = [{Body: '{"Test": 10}'}, {Body: '{"Test": 10}'}];
+        //var conten
+        //message = [{Body: JSON.stringify(cmxNotification)}];
+        //contentLength = JSON.stringify(message).length;
+        //message += cmxNotification;
 
-        request.post({
-            headers: {
-              'Content-Length': content.length,
-              'Content-Type': 'application/json;charset=utf-8',
-              'Authorization': eventHubAuth,
-              'Origin': '*',
-              'Access-Control-Allow-Credentials': true
+        //message = [ { Body: JSON.stringify(cmxNotification) } ];
+        //contentLength = JSON.stringify(message).length;
+
+        var object = { Body: JSON.stringify(cmxNotification) };
+        messages.push(object);
+        var contentLength = JSON.stringify(messages).length;
+
+        if (contentLength > 128 * 1024) {
+            request.post({
+                'https-agent': keepaliveAgent,
+                'headers': {
+                    'Host': config.azureEventHub.serviceBusUri,
+                    'Content-Length': contentLength,
+                    'Content-Type': 'application/vnd.microsoft.servicebus.json',
+                    'Authorization': eventHubAuth,
+                    'Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
+                uri: `https://${config.azureEventHub.serviceBusUri}/${config.azureEventHub.eventHubPath}/messages`,
+                method: 'POST',
+                body: JSON.stringify(messages)
             },
-            uri: `https://${config.azureEventHub.serviceBusUri}/${config.azureEventHub.eventHubPath}/messages`,
-            method: 'POST',
-            body: content
-        },
-        function(err, resp, body) {
-            if(err){
-              console.log(err);
-            } else {
-              console.log(resp.statusCode + ': ' + resp.statusMessage);
-            }
-        });
+            function(err, resp, body) {
+                if(err){
+                    console.log(err);
+                }
+                else {
+                    console.log(resp.statusCode + ': ' + resp.statusMessage + ': ' + resp.body);
+                }
+            });
+
+            contentLength = 0;
+            message = [];
+        }
     }
 };
 exports.insertCMXNotification = insertCMXNotification;
